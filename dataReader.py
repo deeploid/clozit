@@ -27,8 +27,9 @@ def clean_str(string, TREC=False):
     string = re.sub(r"\s{2,}", " ", string)    
     return string.strip() if TREC else string.strip().lower()
 
-def embedder(l,model):
-    return np.asarray([ model[word] for word in l.split() if word in model ])
+def embedder(l):
+    global model
+    return np.asarray([ model[str(word)] for word in l.split() if str(word) in model])
 
 def load_data():
     ###############
@@ -39,6 +40,7 @@ def load_data():
     print('loading word2vec vectors...')
     w2v = load_word2vec(name=w2v_file)
     print("word2vec loaded!")
+    return w2v
 
 model = load_data()
 def next_batch(filename):
@@ -46,11 +48,13 @@ def next_batch(filename):
     with open(filename) as f:
         for line in f:
             if line in '': continue
-            if line.split('///')[0]==None or line.split('///')[1]==None or line.split('///')[2]==None: continue
+            # Get doc
             doc = line.split('///')[0]
-            doc = embedder( clean_str(doc,True), model )
+            doc = embedder( clean_str(doc,False) )
+            # Get question
             question = line.split('///')[1]
-            question = embedder( clean_str(question,True), model )
+            question = embedder( clean_str(question,False) )
+            # Get options
             options = line.split('///')[2].split(',')
             yield (doc,question,options)
 
